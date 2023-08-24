@@ -286,73 +286,55 @@ def conv_m2y(df):
 df_ESG_match = conv_m2y(df_ESG_match)
 df_ESGC_match = conv_m2y(df_ESGC_match)
 
+# cut after 2020
+df_ESG_match = df_ESG_match[df_ESG_match.index < 2021]
+df_ESGC_match = df_ESGC_match[df_ESGC_match.index < 2021]
 
-############################
-# 1.4 Merge Reftv and Compustat
-############################
+# check
+
+######################################################################
+# 1.4 Calculate CONTROLLED ESG dataframe: Merge Reftv and Compustat
+######################################################################
 '''
 If you want to divide the values of the overlapping columns between two DataFrames, 
 you can do so by matching the columns and performing element-wise division. 
 You can use the .div() method in Pandas to achieve this. Here's how you can do it:
 '''
+def cal_two_df(df1, df2, mode):
+    '''
+    To calculate two dataframes 
+    Parameters:
+        df1: (first) dataframe which is inserted into the former one in calculation method (such as div, mul)
+        df2: (second) dataframe which is inserted into the letter one in calculation method (such as div, mul)
+        mode: calculation mode (div or mul)
+    return:
+        df1/df2 or df1*df2
+    '''
+    overlapping_columns = df1.columns.intersection(df2.columns)
+    if mode == 'div':
+        df_result = df1[overlapping_columns].div(df2[overlapping_columns])
+    elif mode == 'mul':
+        df_result = df1[overlapping_columns].mul(df2[overlapping_columns])
+    else:
+        print('no support type')
+    return df_result
 
-
-
-
-df_lst = [at_df, sale_df, ni_df, ch_df, che_df, oancf_df, lt_df, dvc_df, xad_df]
-
-
-overlapping_columns = df_ESG_match.columns.intersection(at_df.columns)  
-df_ESG_to_at = df_ESG_match[overlapping_columns].div(at_df[overlapping_columns])
-
+# Calculate CONTROLLED ESG dataframe
+df_ESG_to_at = cal_two_df(df1=df_ESG_match, df2=at_df, mode='div')
+df_ESG_dot_ch = cal_two_df(df1=df_ESG_match, df2=ch_df, mode='mul')
     
-pd.concat([df_ESG_match.loc[:,'46284V101'], at_df.loc[:,'46284V101'], df_ESG_to_at.loc[:,'46284V101']], axis=1)
 
 
 
-
-# Sample DataFrames
-data1 = {'a': [10, 20, 30], 'b': [5, 10, 15]}
-data2 = {'a': [2, 4, 6], 'b': [1, 2, 3], 'c': [0.1, 0.2, 0.3]}
-
-df1 = pd.DataFrame(data1)
-df2 = pd.DataFrame(data2)
-
-
-
-result_df = df1[overlapping_columns].div(df2[overlapping_columns])
-
-print(result_df)
-
-
-# ### ver 1. list로 덮어씌우기
-# # df_ESG_col_new: Reftv firm name을 dict_name_cusip으로 연결하여 얻은 cusip sequence, 대응되지 않는 요소는 기존의 name을 사용
-# df_ESG_col_new = []
-# for name in df_ESG.columns:
-#     if name in dict_name_cusip:
-#         df_ESG_col_new.append(dict_name_cusip[name])
-#     else:
-#         df_ESG_col_new.append(name)
-
-# # df_ESG_copy의 column 이름을 df_ESG_col_new로 변경
-# df_ESG_new = df_ESG.copy()
-# df_ESG_new.columns = df_ESG_col_new
-# df_ESG_new.loc[:,lst_cusip] # 253 rows x 4565 columns
-
-# lst_cusip_comp = []
-# for c in cusip_compustat:
-#     if c in df_ESG_col_new:
-#         lst_cusip_comp.append(c)
-# df_ESG_new.loc[:,lst_cusip_comp] # 253 rows x 3945 columns
-
-
-######
-# df_info.columns
-# df_P.columns[-30:]
-# check_lst = ['DEAD', 'DELIST']
-# for _ in df_info.loc[-100:,'Name']:
-#     for c in check_lst:
-#         if c in _: 
-#             print(_)
-#     # 
-# ######
+########
+# check 
+'''df_ESG: firmname with monthly
+df_ESG_match: cusip with yearly'''
+# Randomly select 10 columns from df_ESG
+df_ESG_temp = df_ESG.sample(n=3, axis=1) 
+# Preprocess index (to yearly)
+df_ESG_temp.index = pd.to_datetime(df_ESG_temp.index)
+df_ESG_temp = df_ESG_temp.resample('Y').last()
+# match name-cusip
+df_ESG_temp.columns
+# df_ESG_match.loc[:,['12571T100','92342Y109','05070R104']] # manually collect from SEC.gov
