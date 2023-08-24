@@ -202,34 +202,46 @@ df_info = pd.read_csv('data/df_info.csv', index_col=0)
 Indirectly connect name and cusip using code sheet and info sheet
 1. in code sheet, match name (format of retrieved data) and code
 => CAUTION: the name format of info sheet and that of code sheet are DIFFERENT! 
+=> ex) space b/t "DEAD - DELIST"
 => Thus the name in code sheet MUST be used to transform the firmname cols of (old) Reftv data to CUSIP
-2. 
+2. in info sheet, 
 '''
-# DEAD - DELIST 사이의 띄어쓰기...
-# name -> code -> dict
+# dict: name - code
 # eliminate (P) in 'Code' -> convert to dict
 dict_name_code = df_code.loc['Code'][:].replace(to_replace=r'\(P\)',value='',regex=True).to_dict() 
 len(dict_name_code) # 30648
 list(dict_name_code.items())[-10:] 
-# 
 
+# dict: code - name
 # in info sheet, convert to dict (code-cusip)
 df_info_temp = df_info.dropna(subset='CUSIP') # drop nan, reduce significantly no of row 
-df_info_temp.loc[:, 'CUSIP'] = df_info_temp['CUSIP'].astype('str') # unify int/str as str
+df_info_temp.loc[:,'CUSIP'] = df_info_temp['CUSIP'].astype('str').apply(lambda x: x.zfill(9)) # unify int/str as str and fill ZERO for 9-digit
 dict_code_cusip = df_info_temp.set_index('Symbol')['CUSIP'].to_dict()
 len(dict_code_cusip) # 17242
+list(dict_code_cusip.items())[:5] # CAUTION: check whether cusip is 9-digit format. ex) ('@AMZN', '023135106')
+
+# dict: name - cusip
+# store only matched name (with cusip)
+dict_name_cusip = {}
+for key, value in dict_name_code.items():
+    if value in dict_code_cusip:
+        dict_name_cusip[key] = dict_code_cusip[value]
+len(dict_name_cusip)
+list(dict_name_cusip.items())[-10:]
 
 ########VER2#########
 '''
 Directly connect name - cusip in info sheet
 CAUTION: FULFILL for !! 9 digit !! to merge with compustat data (0x9)
 '''
-df_info_temp = df_info.dropna(subset='CUSIP') # drop nan, reduce significantly no of row 
-df_info_temp.loc[:,'CUSIP'] = df_info_temp['CUSIP'].astype('str').apply(lambda x: x.zfill(9)) # unify int/str as str 
-dict_name_cusip = df_info_temp.set_index('Name')['CUSIP'].to_dict() # convert to dict (code-cusip)
-len(dict_name_cusip) # 17125
-list(dict_name_cusip.items())[-100:] # [('APPLE', '037833100'), ('MICROSOFT', '594918104'), ('AMAZON.COM', '023135106')] # The cusip codes must be 9 digits with 0
+# df_info_temp = df_info.dropna(subset='CUSIP') # drop nan, reduce significantly no of row 
+# df_info_temp.loc[:,'CUSIP'] = df_info_temp['CUSIP'].astype('str').apply(lambda x: x.zfill(9)) # unify int/str as str and fill ZERO for 9-digit
+# dict_name_cusip_2 = df_info_temp.set_index('Name')['CUSIP'].to_dict() # convert to dict (code-cusip)
+# len(dict_name_cusip_2) # 17125
+# list(dict_name_cusip_2.items())[-10:] # [('APPLE', '037833100'), ('MICROSOFT', '594918104'), ('AMAZON.COM', '023135106')] 
+# # CAUTION: check whether cusip is 9-digit format. ex) ('@AMZN', '023135106')
 
+####################
 def col_match_name_cusip(df):
     '''
     To convert the columns of the dataframe from name to cusip
@@ -247,30 +259,58 @@ def col_match_name_cusip(df):
     # remain only cusip 
     return df_.loc[:,list(set(cusip_compustat) & set(lst_cusip))]
 
-df_P_match = col_match_name_cusip(df_P)             # [253 rows x 5173 columns]
-df_MV_match = col_match_name_cusip(df_MV)
-df_ESG_match = col_match_name_cusip(df_ESG)
-df_ESGC_match = col_match_name_cusip(df_ESGC)
- # 253 rows x 3945 columns
+# Match name - cusip for four dataframes
+df_P_match = col_match_name_cusip(df_P)             # [253 rows x 8246 columns] <- [253 rows x 21926 columns]
+df_MV_match = col_match_name_cusip(df_MV)           # [253 rows x 8242 columns]
+df_ESG_match = col_match_name_cusip(df_ESG)         # [253 rows x 4322 columns]
+df_ESGC_match = col_match_name_cusip(df_ESGC)       # [253 rows x 4322 columns]
+
+# Convert index format from object to datetime
+df_P_match.index = pd.to_datetime(df_P_match.index)
+df_MV_match.index = pd.to_datetime(df_MV_match.index)
+df_ESG_match.index = pd.to_datetime(df_ESG_match.index)
+df_ESGC_match.index = pd.to_datetime(df_ESGC_match.index)
+
+def conv_m2y(df):
+    '''
+    To convert the index frequency from month to year
+    Return:
+        df with index that has the format of 'YEAR' (not Y-m-D)
+    '''
+    df_temp = df.resample(rule='Y').last()
+    df_temp.index = df_temp.index.year
+    df_temp.index.name = 'year'
+    return df_temp
+
+# Convert the index frequency of ESG and ESGC from month to year
+df_ESG_match = conv_m2y(df_ESG_match)
+df_ESGC_match = conv_m2y(df_ESGC_match)
 
 
-##############
+############################
 # 1.4 Merge Reftv and Compustat
-##############
-
-
-df_lst = [at_df, sale_df, ni_df, ch_df, che_df, oancf_df, lt_df, dvc_df, xad_df]
-
-df
-
-
-
-
+############################
 '''
 If you want to divide the values of the overlapping columns between two DataFrames, 
 you can do so by matching the columns and performing element-wise division. 
 You can use the .div() method in Pandas to achieve this. Here's how you can do it:
 '''
+
+
+
+
+df_lst = [at_df, sale_df, ni_df, ch_df, che_df, oancf_df, lt_df, dvc_df, xad_df]
+
+
+overlapping_columns = df_ESG_match.columns.intersection(at_df.columns)  
+df_ESG_to_at = df_ESG_match[overlapping_columns].div(at_df[overlapping_columns])
+
+    
+pd.concat([df_ESG_match.loc[:,'46284V101'], at_df.loc[:,'46284V101'], df_ESG_to_at.loc[:,'46284V101']], axis=1)
+
+
+
+
 # Sample DataFrames
 data1 = {'a': [10, 20, 30], 'b': [5, 10, 15]}
 data2 = {'a': [2, 4, 6], 'b': [1, 2, 3], 'c': [0.1, 0.2, 0.3]}
@@ -278,8 +318,7 @@ data2 = {'a': [2, 4, 6], 'b': [1, 2, 3], 'c': [0.1, 0.2, 0.3]}
 df1 = pd.DataFrame(data1)
 df2 = pd.DataFrame(data2)
 
-# Divide overlapping columns
-overlapping_columns = df1.columns.intersection(df2.columns)  # Find common columns
+
 
 result_df = df1[overlapping_columns].div(df2[overlapping_columns])
 
