@@ -75,6 +75,12 @@ df_lst = [at_df, sale_df, ni_df, ch_df, che_df, oancf_df, lt_df, dvc_df, xad_df]
  dvc_df   (19, 10076)
  xad_df   (19, 4614)'''
 
+# firms with ZERO and NEGATIVE assets 
+at_df.loc[:, at_df.columns[at_df[at_df <= 0.0].any()]]
+
+# zero and negative assets -> NaN
+at_df = at_df.applymap(lambda x: np.NaN if x <= 0.0 else x)
+
 ###########################
 # 1.2 Refinitiv P MV ESG ESGC data
 ###########################
@@ -112,7 +118,7 @@ df_Ref_tot.shape[1] % 4 == 0 # True: all firm has "P - mv - ESG - ESGC" formats
 '''
 Recall df_Ref_tot
 '''
-df_Ref_tot = pd.read_csv('data/df_Ref_tot.csv', dtype='str')
+df_Ref_tot = pd.read_csv('data/df_Ref_tot.csv', dtype='str') # 30seconds
 df_Ref_tot = df_Ref_tot.set_index('Month')
 
 # Convert strings to numbers where possible, replace non-numeric strings with NaN
@@ -319,12 +325,41 @@ def cal_two_df(df1, df2, mode):
         print('no support type')
     return df_result
 
+# financial variables divided by asset
+df_liq_to_at = cal_two_df(df1=che_df, df2=at_df, mode='div')          # Cash and Short-Term Investments scaled by assets (liquidity)
+df_booklev_to_at = cal_two_df(df1=lt_df, df2=at_df, mode='div')       # liabilities scaled by assets (book leverage)
+df_oancf_to_at = cal_two_df(df1=oancf_df, df2=at_df, mode='div')      # Operating Activities Net Cash Flow scaled by assets
+df_ad_to_at = cal_two_df(df1=xad_df, df2=at_df, mode='div')           # Ads expenditure scaled by assets
+
+# summary statistics
+def sumstat_all(df):
+    max_ = np.nanmax(df.values.reshape((-1,)))
+    min_ = np.nanmin(df.values.reshape((-1,)))
+    mean_ = np.nanmean(df.values.reshape((-1,)))
+    median_ = np.nanmedian(df.values.reshape((-1,)))
+    std_ = np.nanstd(df.values.reshape((-1,)))
+    print(f"max:{max_:.4f}, min:{min_:.4f}, mean:{mean_:.4f}, median:{median_:.4f}, std:{std_:.4f}")
+
+sumstat_all(df_liq_to_at)
+sumstat_all(df_booklev_to_at) 
+sumstat_all(df_oancf_to_at) 
+sumstat_all(df_ad_to_at) 
+sumstat_all(df_ESG_match)
+sumstat_all(df_ESGC_match)
+
 # Calculate CONTROLLED ESG dataframe
-df_ESG_to_at = cal_two_df(df1=df_ESG_match, df2=at_df, mode='div')
-df_ESG_dot_ch = cal_two_df(df1=df_ESG_match, df2=ch_df, mode='mul')
-    
-
-
+# ESG/Size
+df_ESG_to_at = cal_two_df(df1=df_ESG_match, df2=at_df, mode='div')          # ESG scaled by asset
+df_ESG_to_sale = cal_two_df(df1=df_ESG_match, df2=sale_df, mode='div')      # ESG scaled by sales
+# ESG/agencycost
+'''
+ESG risk = 1/(ESG score*liquidity) or 1/(ESG score/book leverage)
+'''
+df_ESG_dot_liq = cal_two_df(df1=df_ESG_match, df2=df_liq_to_at, mode='mul')
+df_ESG_dot_oancf = cal_two_df(df1=df_ESG_match, df2=df_oancf_to_at, mode='mul') # alt proxy of liq
+df_ESG_to_booklev = cal_two_df(df1=df_ESG_match, df2=df_booklev_to_at, mode='div')
+# ESG/ad
+df_ESG_to_ad = cal_two_df(df1=df_ESG_match, df2=df_ad_to_at, mode='div')
 
 ########
 # check 
