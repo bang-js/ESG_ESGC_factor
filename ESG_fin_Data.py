@@ -75,11 +75,17 @@ df_lst = [at_df, sale_df, ni_df, ch_df, che_df, oancf_df, lt_df, dvc_df, xad_df]
  dvc_df   (19, 10076)
  xad_df   (19, 4614)'''
 
-# firms with ZERO and NEGATIVE assets 
+# firms with ZERO and NEGATIVE assets/sales
 at_df.loc[:, at_df.columns[at_df[at_df <= 0.0].any()]]
+sale_df.loc[:, sale_df.columns[sale_df[sale_df <= 0.0].any()]]
+che_df.loc[:,che_df.columns[che_df[che_df <= 0.0].any()]] # cash and short term invest negative?? 
+xad_df.loc[:,xad_df.columns[xad_df[xad_df <= 0.0].any()]] 
 
 # zero and negative assets -> NaN
 at_df = at_df.applymap(lambda x: np.NaN if x <= 0.0 else x)
+sale_df = sale_df.applymap(lambda x: np.NaN if x <= 0.0 else x)
+che_df = che_df.applymap(lambda x: np.NaN if x <= 0.0 else x)
+xad_df = xad_df.applymap(lambda x: np.NaN if x <= 0.0 else x)
 
 ###########################
 # 1.2 Refinitiv P MV ESG ESGC data
@@ -340,12 +346,27 @@ def sumstat_all(df):
     std_ = np.nanstd(df.values.reshape((-1,)))
     print(f"max:{max_:.4f}, min:{min_:.4f}, mean:{mean_:.4f}, median:{median_:.4f}, std:{std_:.4f}")
 
-sumstat_all(df_liq_to_at)
-sumstat_all(df_booklev_to_at) 
-sumstat_all(df_oancf_to_at) 
-sumstat_all(df_ad_to_at) 
+sumstat_all(at_df) # [0, inf)
+sumstat_all(df_liq_to_at) # [0, inf)
+sumstat_all(df_booklev_to_at) # [0, inf)
+sumstat_all(df_oancf_to_at) # (-inf, inf)
+sumstat_all(df_ad_to_at) # [0,inf])
 sumstat_all(df_ESG_match)
 sumstat_all(df_ESGC_match)
+
+'''
+Exponential transformation:
+for the variable x with the range of (-inf, inf), ESG/x is NOT a strictly increse function.
+x_new = exp(x)
+but extremely small number make computational error (imprecision)
+so scale-down is demanded (it is not problematic because the ORDER is only consideration)
+'''
+# # zero check
+# df_oancf_to_at.loc[:,df_oancf_to_at.columns[df_oancf_to_at[df_oancf_to_at==0.0].any()]]
+# # scale down
+# df_oancf_to_at = df_oancf_to_at/10
+# # exponentialize 
+# df_oancf_to_at = np.exp(df_oancf_to_at)
 
 # Calculate CONTROLLED ESG dataframe
 # ESG/Size
@@ -360,6 +381,14 @@ df_ESG_dot_oancf = cal_two_df(df1=df_ESG_match, df2=df_oancf_to_at, mode='mul') 
 df_ESG_to_booklev = cal_two_df(df1=df_ESG_match, df2=df_booklev_to_at, mode='div')
 # ESG/ad
 df_ESG_to_ad = cal_two_df(df1=df_ESG_match, df2=df_ad_to_at, mode='div')
+
+sumstat_all(df_ESG_to_at) # [0, inf)
+sumstat_all(df_ESG_to_sale) # [0, inf)
+sumstat_all(df_ESG_dot_liq) # [0, inf)
+sumstat_all(df_ESG_dot_oancf) # (-inf, inf)
+sumstat_all(df_ESG_to_booklev) # [0, inf])
+sumstat_all(df_ESG_to_ad) # [0, inf])
+
 
 ########
 # check 
