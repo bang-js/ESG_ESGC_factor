@@ -389,6 +389,13 @@ sumstat_all(df_ESG_dot_oancf) # (-inf, inf)
 sumstat_all(df_ESG_to_booklev) # [0, inf])
 sumstat_all(df_ESG_to_ad) # [0, inf])
 
+# save the dataframes
+df_ESG_to_at.to_csv('df_ESG_to_at.csv')
+df_ESG_to_sale.to_csv('df_ESG_to_sale.csv')
+df_ESG_dot_liq.to_csv('df_ESG_dot_liq.csv')
+df_ESG_dot_oancf.to_csv('df_ESG_dot_oancf.csv')
+df_ESG_to_booklev.to_csv('df_ESG_to_booklev.csv')
+df_ESG_to_ad.to_csv('df_ESG_to_ad.csv')
 
 ########
 # check 
