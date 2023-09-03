@@ -302,7 +302,9 @@ df_ESGC_match = conv_m2y(df_ESGC_match)
 df_ESG_match = df_ESG_match[df_ESG_match.index < 2021]
 df_ESGC_match = df_ESGC_match[df_ESGC_match.index < 2021]
 
-# check
+# save
+df_P_match.to_csv('df_P.csv')
+df_MV_match.to_csv('df_MV.csv')
 
 ######################################################################
 # 1.4 Calculate CONTROLLED ESG dataframe: Merge Reftv and Compustat
@@ -382,12 +384,12 @@ df_ESG_to_booklev = cal_two_df(df1=df_ESG_match, df2=df_booklev_to_at, mode='div
 # ESG/ad
 df_ESG_to_ad = cal_two_df(df1=df_ESG_match, df2=df_ad_to_at, mode='div')
 
-sumstat_all(df_ESG_to_at) # [0, inf)
-sumstat_all(df_ESG_to_sale) # [0, inf)
-sumstat_all(df_ESG_dot_liq) # [0, inf)
-sumstat_all(df_ESG_dot_oancf) # (-inf, inf)
-sumstat_all(df_ESG_to_booklev) # [0, inf])
-sumstat_all(df_ESG_to_ad) # [0, inf])
+sumstat_all(df_ESG_to_at) # [0, inf) # [19 rows x 4303 columns]
+sumstat_all(df_ESG_to_sale) # [0, inf) # [19 rows x 4303 columns]
+sumstat_all(df_ESG_dot_liq) # [0, inf) # [19 rows x 4303 columns]
+sumstat_all(df_ESG_dot_oancf) # (-inf, inf) # [19 rows x 4303 columns]
+sumstat_all(df_ESG_to_booklev) # [0, inf]) # [19 rows x 4303 columns]
+sumstat_all(df_ESG_to_ad) # [0, inf]) # [19 rows x 2110 columns]
 
 # save the dataframes
 df_ESG_to_at.to_csv('df_ESG_to_at.csv')
