@@ -392,22 +392,22 @@ sumstat_all(df_ESG_to_booklev) # [0, inf]) # [19 rows x 4303 columns]
 sumstat_all(df_ESG_to_ad) # [0, inf]) # [19 rows x 2110 columns]
 
 # save the dataframes
-df_ESG_to_at.to_csv('df_ESG_to_at.csv')
-df_ESG_to_sale.to_csv('df_ESG_to_sale.csv')
-df_ESG_dot_liq.to_csv('df_ESG_dot_liq.csv')
-df_ESG_dot_oancf.to_csv('df_ESG_dot_oancf.csv')
-df_ESG_to_booklev.to_csv('df_ESG_to_booklev.csv')
-df_ESG_to_ad.to_csv('df_ESG_to_ad.csv')
+df_ESG_to_at.to_csv('data/df_ESG_to_at.csv')
+df_ESG_to_sale.to_csv('data/df_ESG_to_sale.csv')
+df_ESG_dot_liq.to_csv('data/df_ESG_dot_liq.csv')
+df_ESG_dot_oancf.to_csv('data/df_ESG_dot_oancf.csv')
+df_ESG_to_booklev.to_csv('data/df_ESG_to_booklev.csv')
+df_ESG_to_ad.to_csv('data/df_ESG_to_ad.csv')
 
-########
-# check 
-'''df_ESG: firmname with monthly
-df_ESG_match: cusip with yearly'''
-# Randomly select 10 columns from df_ESG
-df_ESG_temp = df_ESG.sample(n=3, axis=1) 
-# Preprocess index (to yearly)
-df_ESG_temp.index = pd.to_datetime(df_ESG_temp.index)
-df_ESG_temp = df_ESG_temp.resample('Y').last()
-# match name-cusip
-df_ESG_temp.columns
-# df_ESG_match.loc[:,['12571T100','92342Y109','05070R104']] # manually collect from SEC.gov
+# ########
+# # check 
+# '''df_ESG: firmname with monthly
+# df_ESG_match: cusip with yearly'''
+# # Randomly select 10 columns from df_ESG
+# df_ESG_temp = df_ESG.sample(n=3, axis=1) 
+# # Preprocess index (to yearly)
+# df_ESG_temp.index = pd.to_datetime(df_ESG_temp.index)
+# df_ESG_temp = df_ESG_temp.resample('Y').last()
+# # match name-cusip
+# df_ESG_temp.columns
+# # df_ESG_match.loc[:,['12571T100','92342Y109','05070R104']] # manually collect from SEC.gov
