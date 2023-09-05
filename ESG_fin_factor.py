@@ -417,7 +417,7 @@ esg_to_ad_value.describe()
 ##########################################################
 # 2.4. Saving TWO-WAY portfolio return data
 ##########################################################
-
+### calculate N by M portfolio returns ###
 def saving_twoway_pf_vw(quantile_1, quantile_2, df_temp_1, df_temp_2=df_MV_year, start_criterion=2002, end_criterion=2020):
     df_pf_value = multi_factor_cal(quantile_1=quantile_1, 
     quantile_2=quantile_2, 
@@ -436,7 +436,7 @@ def saving_twoway_pf_vw(quantile_1, quantile_2, df_temp_1, df_temp_2=df_MV_year,
 
 # Environment: Set quantile
 quantile_1_set = 3
-quantile_2_set = 3
+quantile_2_set = 2
 
 # Size
 esg_to_at_value_two_size = saving_twoway_pf_vw(quantile_1=quantile_1_set, quantile_2=quantile_2_set, df_temp_1=df_ESG_to_at)
@@ -463,14 +463,20 @@ esg_dot_liq_value_two_size.describe()
 esg_dot_oancf_value_two_size.describe()
 esg_to_booklev_value_two_size.describe()
 
-
-### factor returns ###
-def saving_twoway_factor_vw(quantile_1, df_temp_1, quantile_2=2, df_temp_2=df_MV_year, start_criterion=2002, end_criterion=2020):
+### Calculate factor returns ###
+def saving_twoway_factor_vw(df_temp_1, quantile_1, quantile_2, df_temp_2=df_MV_year, start_criterion=2002, end_criterion=2020):
     '''
     This function is to calculate factor returns from two-way sorting by the target variable and SIZE 
     For examle, using 3x2 portfolio consisting of size (small and big) and controlled ESG (high middle low)
     factor = 1/2*(small high + big high) - 1/2*(small low + big low)
+    |         | ESG_L | ESG_M | ESG_H |
+    |---------|-------|-------|-------|
+    | Small   | 0     | 1     | 2     |
+    | Big     | 3     | 4     | 5     |
     '''
+    df_temp_1 = df_ESG_to_ad
+    df_temp_2 = df_MV_year
+    
 
     df_pf_value = multi_factor_cal(quantile_1=quantile_1, 
     quantile_2=quantile_2, 
@@ -484,5 +490,43 @@ def saving_twoway_factor_vw(quantile_1, df_temp_1, quantile_2=2, df_temp_2=df_MV
     period_cut = pd.date_range('{}-07'.format(start_criterion+1), '{}-01'.format(end_criterion+2), freq='M')  
     df_pf_value = df_pf_value.loc[period_cut,:]
     
-    print(df_pf_value.describe())
-    return df_pf_value
+    # calculate factor
+    short_pf = list(range(0, quantile_2*quantile_1, quantile_1))
+    long_pf = list(range(quantile_1-1, quantile_2*quantile_1, quantile_1))
+    factor_rtn = (df_pf_value.iloc[:,long_pf]).mean(axis=1) - (df_pf_value.iloc[:,short_pf]).mean(axis=1)
+    
+    return factor_rtn
+
+# Environment: Set quantile
+saving_twoway_factor_vw_q1 = 3
+saving_twoway_factor_vw_q2 = 2
+
+# Size
+esg_to_at_value_two_size_factor = saving_twoway_factor_vw(df_temp_1=df_ESG_to_at, 
+                                                        quantile_1=saving_twoway_factor_vw_q1, 
+                                                        quantile_2=saving_twoway_factor_vw_q2)
+esg_to_at_value_two_size_factor.to_csv(f'result/esg_to_at_value_two_size_factor_q{saving_twoway_factor_vw_q1}_{saving_twoway_factor_vw_q2}.csv')
+esg_to_sale_value_two_size_factor = saving_twoway_factor_vw(df_temp_1=df_ESG_to_sale,
+                                                        quantile_1=saving_twoway_factor_vw_q1, 
+                                                        quantile_2=saving_twoway_factor_vw_q2)
+esg_to_sale_value_two_size_factor.to_csv(f'result/esg_to_sale_value_two_size_factor_q{saving_twoway_factor_vw_q1}_{saving_twoway_factor_vw_q2}.csv')
+
+# Agency problem
+esg_dot_liq_value_two_size_factor = saving_twoway_factor_vw(df_temp_1=df_ESG_dot_liq, 
+                                                        quantile_1=saving_twoway_factor_vw_q1, 
+                                                        quantile_2=saving_twoway_factor_vw_q2)
+esg_dot_liq_value_two_size_factor.to_csv(f'result/esg_dot_liq_value_two_size_factor_q{saving_twoway_factor_vw_q1}_{saving_twoway_factor_vw_q2}.csv')
+esg_dot_oancf_value_two_size_factor = saving_twoway_factor_vw(df_temp_1=df_ESG_dot_oancf,
+                                                        quantile_1=saving_twoway_factor_vw_q1, 
+                                                        quantile_2=saving_twoway_factor_vw_q2)
+esg_dot_oancf_value_two_size_factor.to_csv(f'result/esg_dot_oancf_value_two_size_factor_q{saving_twoway_factor_vw_q1}_{saving_twoway_factor_vw_q2}.csv')
+esg_to_booklev_value_two_size_factor = saving_twoway_factor_vw(df_temp_1=df_ESG_to_booklev,
+                                                        quantile_1=saving_twoway_factor_vw_q1, 
+                                                        quantile_2=saving_twoway_factor_vw_q2)
+esg_to_booklev_value_two_size_factor.to_csv(f'result/esg_to_booklev_value_two_size_factor_q{saving_twoway_factor_vw_q1}_{saving_twoway_factor_vw_q2}.csv')
+
+# Perception
+esg_to_ad_value_two_size_factor = saving_twoway_factor_vw(df_temp_1=df_ESG_to_ad,
+                                                        quantile_1=saving_twoway_factor_vw_q1, 
+                                                        quantile_2=saving_twoway_factor_vw_q2)
+esg_to_ad_value_two_size_factor.to_csv(f'result/esg_to_ad_value_two_size_factor_q{saving_twoway_factor_vw_q1}_{saving_twoway_factor_vw_q2}.csv')
