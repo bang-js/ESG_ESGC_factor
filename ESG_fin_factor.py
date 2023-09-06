@@ -53,12 +53,14 @@ def no_stock(x,y):
 # ONE-WAY sort portfolio
 #########
 
-# |       | High | ... | Low |
-# |-------|------|-----|-----|
-# | pf no.| 1    |     |q(>1)|
-
+# |       | Low  | ... | High |
+# |-------|------|-----|------|
+# | pf no.| 1    |     |q(>1) |
+#           --- INCREASE --->
 def factor_cal(quantile, weight_mode, df_temp, df_temp_p=df_P, df_temp_mv=df_MV, start_criterion=2002, end_criterion=2020):
     '''
+    The purpose of this function is to calculat the sorted portfolio returns using pandas qcut method.
+
     Parameters
         quantile: quantile no.
         weight mode \in {value, equal, log-value}
@@ -91,25 +93,22 @@ def factor_cal(quantile, weight_mode, df_temp, df_temp_p=df_P, df_temp_mv=df_MV,
 
     # calcualte factor returns
     for y, year in enumerate(df_temp.index):
-        # sort by ESG score (descending)
-        series_sort = df_temp.iloc[y][:].sort_values(ascending=False)
-        # saving non-NaN firm array by boolean indexing (not NaN)
-        notna_index = series_sort.notna()         
-        series_sort = series_sort[notna_index]
+        # row of year y (series) -> dataframe (shape=(n,1)) 
+        df_per_year_cr = df_temp.iloc[y][:].to_frame('first') 
+        '''note. due to to_frame() the df is transposed '''
+        
+        # eliminate firms that have NaN data
+        df_per_year_cr.dropna(inplace=True)
 
-        # storing firms in each quantile into partitions
-        n = series_sort.shape[0]
+        # generate quantile no of each firm 
+        df_per_year_cr['quantile'] = pd.qcut(df_per_year_cr['first'], quantile, labels=False)
+
+        # partition arrays for each quantile
         partition = []
-        adj_tie = [0] # adjusting same scored firms
-        for _ in range(quantile-1):
-            __ = 1
-            while series_sort[int((_+1)/quantile*n)] == series_sort[int((_+1)/quantile*n)+__] :
-                __ += 1
-            adj_tie.append(int((_+1)/quantile*n+__))
-        adj_tie.append(n)
-        # print(adj_tie)
-        for _ in range(len(adj_tie)-1):
-            partition.append(series_sort.index[adj_tie[_]:adj_tie[_+1]])
+        for _q in range(quantile):
+            # Find the indices of rows with the target value
+            temp_q = df_per_year_cr.index[df_per_year_cr['quantile'] == _q].to_numpy()
+            partition.append(temp_q)
 
         # set time range : from July of year t+1 to June of year t+2
         t_rg = pd.date_range(str(year+1)+'-06', freq='M', periods=13)  # get July of year t+2 to calculate r_t+1
@@ -142,127 +141,6 @@ def factor_cal(quantile, weight_mode, df_temp, df_temp_p=df_P, df_temp_mv=df_MV,
     quantile_return_df = pd.DataFrame(quantile_return-1, columns=col, index=period) # result format: 0.xx (not 0.9xx - 1.xxx)
     
     return quantile_return_df
-
-### ver2 ###
-# def factor_cal_v2(quantile, weight_mode, df_temp, df_temp_p=df_P, df_temp_mv=df_MV, start_criterion=2002, end_criterion=2020):
-#     '''
-#     The purpose of this function is to replicate the above function using other logic.
-#     It uses the pandas qcut method.
-
-#     Parameters
-#         quantile: quantile no.
-#         weight mode \in {value, equal, log-value}
-#         df_temp: df_ESG, df_ESGC, ... (YEARLY)
-#         df_temp_p: price dateframe (MONTHLY)
-#         df_temp_mv: market value dataframe (MONTHLY)
-#         start_criterion, end_criterion: the start year and end year of the criterion (e.g. ESG)
-
-#     Return
-#         quantile_return_df: one-way portfolio returns (monthly) by the given quantile
-#     '''
-#     # drop firm without ESG or price or mv data
-#     ov_col = df_temp_p.columns.intersection(df_temp_mv.columns).intersection(df_temp.columns)
-#     df_temp = df_temp[ov_col]
-#     df_temp_p = df_temp_p[ov_col]
-#     df_temp_mv = df_temp_mv[ov_col]
-
-#     # the start year of factor construction (the next year of the sort variable's year)
-#     start = int(start_criterion + 1)  
-#     end = int(end_criterion + 1) 
-
-#     # generate stock return dataframe
-#     df_temp_r = df_temp_p/df_temp_p.shift(1)
-
-#     # array for storing return values
-#     quantile_return = np.empty((int((end_criterion-start_criterion+1)*12),quantile))
-
-#     # slice target data for the given period
-#     df_temp = df_temp[(start_criterion <= df_temp.index) & (df_temp.index <= end_criterion)] # from Jul 2003 to Jun 2022
-
-#     # calcualte factor returns
-#     for y, year in enumerate(df_temp.index):
-
-#         df_per_year_cr = df_temp.iloc[y][:].to_frame('first') # row of year y (series) -> dataframe (shape=(n,1)) 
-#         '''note. due to to_frame() the df is transposed '''
-
-# '''
-# 아래 수정중
-# '''
-#         # ESG 점수 및 MV가 없는 기업은 불필요하므로 삭제 (first 기준으로 삭제)
-#         df_per_year_cr.dropna(inplace=True)
-
-#         # generate quantile column, default is the no. of quantiles
-#         df_per_year_cr['quantile'] = quantile - 1 # last no. of pf
-        
-#         # 100pt인 기업과 그 미만인 기업으로 분리
-#         df_per_year_cr_100 = df_per_year_cr[df_per_year_cr['first']==100.0]
-#         df_per_year_cr_under100 = df_per_year_cr[df_per_year_cr['first']<100.0]
-        
-#         # 100pt 미만 기업에 대하여 quantile 계산, 100pt의 quantile 값은 default 그대로 사용
-#         df_per_year_cr_under100['quantile'] = pd.qcut(df_per_year_cr_under100['first'], quantile-1, labels=False)
-        
-#         # merge
-#         df_per_year_cr = pd.concat([df_per_year_cr_100, df_per_year_cr_under100], axis=0)
-
-#         # 각 pf no.에 맞는 array 생성
-#         partition = []
-#         for _q in range(quantile):
-#             # Find the indices of rows with the target value
-#             temp_q = df_per_year_cr.index[df_per_year_cr['quantile'] == _q].to_numpy()
-#             partition.append(temp_q)
-
-#         ##############################################################################################
-#         # sort by ESG score (descending)
-#         series_sort = df_temp.iloc[y][:].sort_values(ascending=False)
-#         # saving non-NaN firm array by boolean indexing (not NaN)
-#         notna_index = series_sort.notna()         
-#         series_sort = series_sort[notna_index]
-
-#         # storing firms in each quantile into partitions
-#         n = series_sort.shape[0]
-#         partition = []
-#         adj_tie = [0] # adjusting same scored firms
-#         for _ in range(quantile-1):
-#             __ = 1
-#             while series_sort[int((_+1)/quantile*n)] == series_sort[int((_+1)/quantile*n)+__] :
-#                 __ += 1
-#             adj_tie.append(int((_+1)/quantile*n+__))
-#         adj_tie.append(n)
-#         # print(adj_tie)
-#         for _ in range(len(adj_tie)-1):
-#             partition.append(series_sort.index[adj_tie[_]:adj_tie[_+1]])
-
-#         # set time range : from July of year t+1 to June of year t+2
-#         t_rg = pd.date_range(str(year+1)+'-06', freq='M', periods=13)  # get July of year t+2 to calculate r_t+1
-
-#         ### calculate factor returns ###
-#         # weight (mv): one month ahead / return: the given month
-#         ## value weight
-#         if weight_mode == 'value':
-#             for q, firms_qt in enumerate(partition):
-#                 # print('quantil no',q+1)
-#                 for _, t in enumerate(t_rg[:-1]):
-#                     r_t1 = np.array(df_temp_r.loc[t_rg[_+1],firms_qt].values) # r_t+1 vector             
-#                     w_t = np.array(df_temp_mv.loc[t,firms_qt].values/df_temp_mv.loc[t,firms_qt].sum(skipna=True)) # w_t vector for value-weight portfolio
-#                     # print(t_rg[_+1], np.nansum(r_t1*w_t), no_stock(r_t1, w_t)) # date - factor return - no. of stock            
-#                     quantile_return[y*12+_,q] = np.nansum(r_t1*w_t) # store
-
-#         ## equal weight
-#         elif weight_mode == 'equal':
-#             for q, firms_qt in enumerate(partition):
-#                 # print('quantil no',q+1)
-#                 for _, t in enumerate(t_rg[:-1]):
-#                     r_t1 = np.array(df_temp_r.loc[t_rg[_+1],firms_qt].values) # r_t+1 vector
-#                     # print(t_rg[_+1], np.nanmean(r_t1), no_stock(r_t1, r_t1))            
-#                     quantile_return[y*12+_,q] = np.nanmean(r_t1) # store
-#     # print(quantile_return) 
-    
-#     # generate df of factor returns (monthly)
-#     period = pd.date_range('{}-07'.format(start), '{}-07'.format(end+1), freq='M')  
-#     col = (np.arange(quantile) + 1).astype('str')
-#     quantile_return_df = pd.DataFrame(quantile_return-1, columns=col, index=period) # result format: 0.xx (not 0.9xx - 1.xxx)
-    
-#     return quantile_return_df
 
 #########
 # TWO-WAY sort portfolio
@@ -457,12 +335,15 @@ esg_to_ad_value_two_size = saving_twoway_pf_vw(quantile_1=quantile_1_set, quanti
 esg_to_ad_value_two_size.to_csv(f'result/esg_to_ad_value_two_size_q{quantile_1_set}_{quantile_2_set}.csv')
 
 # describe
+# Notice. 0: lowest & smallest, q1*q2-1: highest & biggest
 esg_to_at_value_two_size.describe()
 esg_to_sale_value_two_size.describe()
 esg_dot_liq_value_two_size.describe()
 esg_dot_oancf_value_two_size.describe()
 esg_to_booklev_value_two_size.describe()
+esg_to_ad_value_two_size.describe()
 
+##########################################################
 ### Calculate factor returns ###
 def saving_twoway_factor_vw(df_temp_1, quantile_1, quantile_2, df_temp_2=df_MV_year, start_criterion=2002, end_criterion=2020):
     '''
@@ -474,10 +355,6 @@ def saving_twoway_factor_vw(df_temp_1, quantile_1, quantile_2, df_temp_2=df_MV_y
     | Small   | 0     | 1     | 2     |
     | Big     | 3     | 4     | 5     |
     '''
-    df_temp_1 = df_ESG_to_ad
-    df_temp_2 = df_MV_year
-    
-
     df_pf_value = multi_factor_cal(quantile_1=quantile_1, 
     quantile_2=quantile_2, 
     weight_mode='value', 
