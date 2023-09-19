@@ -6,7 +6,6 @@ Keywords: Merge
 
 import pandas as pd
 import numpy as np
-import sys
 
 ###########################
 ###########################
@@ -302,9 +301,9 @@ df_ESGC_match = conv_m2y(df_ESGC_match)
 df_ESG_match = df_ESG_match[df_ESG_match.index < 2021]
 df_ESGC_match = df_ESGC_match[df_ESGC_match.index < 2021]
 
-# save
-df_P_match.to_csv('df_P.csv')
-df_MV_match.to_csv('df_MV.csv')
+# # save
+# df_P_match.to_csv('df_P.csv')
+# df_MV_match.to_csv('df_MV.csv')
 
 ######################################################################
 # 1.4 Calculate CONTROLLED ESG dataframe: Merge Reftv and Compustat
@@ -370,14 +369,13 @@ so scale-down is demanded (it is not problematic because the ORDER is only consi
 # # exponentialize 
 # df_oancf_to_at = np.exp(df_oancf_to_at)
 
+'''ESG'''
 # Calculate CONTROLLED ESG dataframe
 # ESG/Size
 df_ESG_to_at = cal_two_df(df1=df_ESG_match, df2=at_df, mode='div')          # ESG scaled by asset
 df_ESG_to_sale = cal_two_df(df1=df_ESG_match, df2=sale_df, mode='div')      # ESG scaled by sales
 # ESG/agencycost
-'''
-ESG risk = 1/(ESG score*liquidity) or 1/(ESG score/book leverage)
-'''
+# ESG risk = 1/(ESG score*liquidity) or 1/(ESG score/book leverage)
 df_ESG_dot_liq = cal_two_df(df1=df_ESG_match, df2=df_liq_to_at, mode='mul')
 df_ESG_dot_oancf = cal_two_df(df1=df_ESG_match, df2=df_oancf_to_at, mode='mul') # alt proxy of liq
 df_ESG_to_booklev = cal_two_df(df1=df_ESG_match, df2=df_booklev_to_at, mode='div')
@@ -398,6 +396,27 @@ df_ESG_dot_liq.to_csv('data/df_ESG_dot_liq.csv')
 df_ESG_dot_oancf.to_csv('data/df_ESG_dot_oancf.csv')
 df_ESG_to_booklev.to_csv('data/df_ESG_to_booklev.csv')
 df_ESG_to_ad.to_csv('data/df_ESG_to_ad.csv')
+
+'''ESG Controversy'''
+# ESG/Size
+df_ESGC_to_at = cal_two_df(df1=df_ESGC_match, df2=at_df, mode='div')          # ESGC scaled by asset
+df_ESGC_to_sale = cal_two_df(df1=df_ESGC_match, df2=sale_df, mode='div')      # ESGC scaled by sales
+# ESG/agencycost
+# ESG risk = 1/(ESG score*liquidity) or 1/(ESG score/book leverage)
+df_ESGC_dot_liq = cal_two_df(df1=df_ESGC_match, df2=df_liq_to_at, mode='mul')
+df_ESGC_dot_oancf = cal_two_df(df1=df_ESGC_match, df2=df_oancf_to_at, mode='mul') # alt proxy of liq
+df_ESGC_to_booklev = cal_two_df(df1=df_ESGC_match, df2=df_booklev_to_at, mode='div')
+# ESG/ad
+df_ESGC_to_ad = cal_two_df(df1=df_ESGC_match, df2=df_ad_to_at, mode='div')
+
+# save the dataframes
+df_ESGC_to_at.to_csv('data/df_ESGC_to_at.csv')
+df_ESGC_to_sale.to_csv('data/df_ESGC_to_sale.csv')
+df_ESGC_dot_liq.to_csv('data/df_ESGC_dot_liq.csv')
+df_ESGC_dot_oancf.to_csv('data/df_ESGC_dot_oancf.csv')
+df_ESGC_to_booklev.to_csv('data/df_ESGC_to_booklev.csv')
+df_ESGC_to_ad.to_csv('data/df_ESGC_to_ad.csv')
+
 
 # ########
 # # check 
