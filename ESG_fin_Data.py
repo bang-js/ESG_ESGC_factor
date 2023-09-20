@@ -310,6 +310,13 @@ df_ESG_match.apply(pd.DataFrame.describe, axis=1).round(2) # by year
 df_ESG_match.stack().describe().round(2) # all
 df_ESGC_match.stack().describe().round(2) # all
 
+
+### ESG Controversy change ###
+df_ESGC_Chg_match = df_ESGC_match.diff()
+df_ESGC_Chg_match.stack().describe().round(2)
+df_ESGC_Chg_match.stack().quantile(np.arange(0,0.25,0.01)).round(2) # after 0.17, go zero
+df_ESGC_Chg_match.stack().quantile(np.arange(0.75,1,0.01)).round(2) # before 0.86, go zero
+
 ######################################################################
 # 1.4 Calculate CONTROLLED ESG dataframe: Merge Reftv and Compustat
 ######################################################################
@@ -374,7 +381,7 @@ def apply_log(x):
     if x >= 0:
         return np.log(1 + x)
     else: # symmetric with x>=0
-        return np.log(1 - x)
+        return -np.log(1 - x)
 
 def minmax_scale(df, log_scale=False):
     '''min max scale
@@ -441,7 +448,6 @@ df_ESG_dot_oancf.to_csv('data/df_ESG_dot_oancf.csv')
 df_ESG_to_booklev.to_csv('data/df_ESG_to_booklev.csv')
 df_ESG_to_ad.to_csv('data/df_ESG_to_ad.csv')
 
-
 '''w/ scaling'''
 # ESG/Size
 df_ESG_to_at_mmlog = cal_two_df(df1=df_ESG_match, df2=minmax_scale(at_df, log_scale=True), mode='div')          # ESG scaled by asset
@@ -474,6 +480,42 @@ df_ESG_to_booklev_mmlog.to_csv('data/df_ESG_to_booklev_mmlog.csv')
 df_ESG_to_ad_mmlog.to_csv('data/df_ESG_to_ad_mmlog.csv')
 
 '''
+ESG, controlled by Lagged
+'''
+'''w/ scaling'''
+lag = 1
+# ESG/Size
+df_ESG_to_l_at_mmlog = cal_two_df(df1=df_ESG_match, df2=minmax_scale(at_df.shift(lag), log_scale=True), mode='div')          # ESG scaled by asset
+df_ESG_to_l_sale_mmlog = cal_two_df(df1=df_ESG_match, df2=minmax_scale(sale_df.shift(lag), log_scale=True) , mode='div')      # ESG scaled by sales
+# ESG/agencycost
+# ESG risk = 1/(ESG score*liquidity) or 1/(ESG score/book leverage)
+df_ESG_dot_l_liq_mmlog = cal_two_df(df1=df_ESG_match, df2=minmax_scale(df_liq_to_at.shift(lag), log_scale=True), mode='mul')
+df_ESG_dot_l_oancf_mmlog = cal_two_df(df1=df_ESG_match, df2=minmax_scale(df_oancf_to_at.shift(lag), log_scale=True), mode='mul') # alt proxy of liq
+df_ESG_to_l_booklev_mmlog = cal_two_df(df1=df_ESG_match, df2=minmax_scale(df_booklev_to_at.shift(lag), log_scale=True), mode='div')
+# ESG/ad
+df_ESG_to_l_ad_mmlog = cal_two_df(df1=df_ESG_match, df2=minmax_scale(df_ad_to_at.shift(lag), log_scale=True), mode='div')
+
+# describe
+df_ESG_to_l_at_mmlog.stack().describe().round(4) # [0, inf) # [19 rows x 4303 columns]
+df_ESG_to_l_sale_mmlog.stack().describe().round(4) # [0, inf) # [19 rows x 4303 columns]
+# df_ESG_to_sale_mmlog.stack().quantile(np.arange(0.9,1.005,0.005)).round(2)
+df_ESG_dot_l_liq_mmlog.stack().describe().round(4) # [0, inf) # [19 rows x 4303 columns]
+df_ESG_dot_l_oancf_mmlog.stack().describe().round(4) # (-inf, inf) # [19 rows x 4303 columns]
+df_ESG_to_l_booklev_mmlog.stack().describe().round(4) # [0, inf]) # [19 rows x 4303 columns]
+# df_ESG_to_booklev_mmlog.stack().quantile(np.arange(0.9,1.005,0.005)).round(2)
+df_ESG_to_l_ad_mmlog.stack().describe().round(4) # [0, inf]) # [19 rows x 2110 columns]
+# df_ESG_to_l_ad_mmlog.stack().quantile(np.arange(0.9,1.005,0.005)).round(2)
+
+# save the dataframes
+df_ESG_to_l_at_mmlog.to_csv('data/df_ESG_to_l_at_mmlog.csv')
+df_ESG_to_l_sale_mmlog.to_csv('data/df_ESG_to_l_sale_mmlog.csv')
+df_ESG_dot_l_liq_mmlog.to_csv('data/df_ESG_dot_l_liq_mmlog.csv')
+df_ESG_dot_l_oancf_mmlog.to_csv('data/df_ESG_dot_l_oancf_mmlog.csv')
+df_ESG_to_l_booklev_mmlog.to_csv('data/df_ESG_to_l_booklev_mmlog.csv')
+df_ESG_to_l_ad_mmlog.to_csv('data/df_ESG_to_l_ad_mmlog.csv')
+
+
+'''
 ESG Controversy
 '''
 # ESG/Size
@@ -495,6 +537,15 @@ df_ESGC_dot_oancf.to_csv('data/df_ESGC_dot_oancf.csv')
 df_ESGC_to_booklev.to_csv('data/df_ESGC_to_booklev.csv')
 df_ESGC_to_ad.to_csv('data/df_ESGC_to_ad.csv')
 
+'''
+Greenwashing or ESG betrayal
+'''
+df_GW = df_ESGC_match * df_ESG_match.shift(1)
+df_GW.stack().describe().round(2)
+df_GW.stack().quantile(np.arange(0,1.1,0.1)).round(2)
+df_GW.apply(pd.DataFrame.describe, axis=1).round(2) # by year
+df_GW.transpose().quantile(np.arange(0,1.1,0.1)).round(2) # by year
+df_GW.to_csv('data/df_GW.csv')
 
 # ########
 # # check 
