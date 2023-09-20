@@ -10,6 +10,7 @@ import numpy as np
 ##########################################################
 # 2.1. Retrieving saved data: p, mv, controlled ESG
 ##########################################################
+'''ESG'''
 # controlled ESG data
 df_ESG_to_at = pd.read_csv('data/df_ESG_to_at.csv', index_col=0)
 df_ESG_to_sale = pd.read_csv('data/df_ESG_to_sale.csv', index_col=0)
@@ -18,6 +19,16 @@ df_ESG_dot_oancf = pd.read_csv('data/df_ESG_dot_oancf.csv', index_col=0)
 df_ESG_to_booklev = pd.read_csv('data/df_ESG_to_booklev.csv', index_col=0)
 df_ESG_to_ad = pd.read_csv('data/df_ESG_to_ad.csv', index_col=0)
 
+'''ESG Controversy'''
+# controlled ESG data
+df_ESGC_to_at = pd.read_csv('data/df_ESGC_to_at.csv', index_col=0)
+df_ESGC_to_sale = pd.read_csv('data/df_ESGC_to_sale.csv', index_col=0)
+df_ESGC_dot_liq = pd.read_csv('data/df_ESGC_dot_liq.csv', index_col=0)
+df_ESGC_dot_oancf = pd.read_csv('data/df_ESGC_dot_oancf.csv', index_col=0)
+df_ESGC_to_booklev = pd.read_csv('data/df_ESGC_to_booklev.csv', index_col=0)
+df_ESGC_to_ad = pd.read_csv('data/df_ESGC_to_ad.csv', index_col=0)
+
+'''Common for ESG and ESGC'''
 # pre-processing P and MV df
 df_P = pd.read_csv('data/df_P.csv', index_col=0) # [253 rows x 8246 columns]
 df_P.index = pd.to_datetime(df_P.index)
@@ -264,8 +275,9 @@ def saving_oneway_pf_vw(quantile, df_temp, start_criterion=2002, end_criterion=2
     return df_pf_value
 
 # Environment: Set quantile
-quantile_set = 5
+quantile_set = 10
 
+'''ESG'''
 ### save long-short pf as factor (high - low)
 # Size
 esg_to_at_value = saving_oneway_pf_vw(quantile=quantile_set, df_temp=df_ESG_to_at)
@@ -292,6 +304,34 @@ esg_dot_oancf_value.describe()
 esg_to_booklev_value.describe()
 esg_to_ad_value.describe()
 
+'''ESG Controversy'''
+### save long-short pf as factor (high - low)
+# Size
+esgc_to_at_value = saving_oneway_pf_vw(quantile=quantile_set, df_temp=df_ESGC_to_at)
+(esgc_to_at_value.iloc[:,0] - esgc_to_at_value.iloc[:,-1]).to_csv(f'result/esgc_to_at_value_q{quantile_set}.csv') 
+esgc_to_sale_value = saving_oneway_pf_vw(quantile=quantile_set, df_temp=df_ESGC_to_sale)
+(esgc_to_sale_value.iloc[:,0] - esgc_to_sale_value.iloc[:,-1]).to_csv(f'result/esgc_to_sale_value_q{quantile_set}.csv')
+
+# Agency problem
+esgc_dot_liq_value = saving_oneway_pf_vw(quantile=quantile_set, df_temp=df_ESGC_dot_liq)
+(esgc_dot_liq_value.iloc[:,0] - esgc_dot_liq_value.iloc[:,-1]).to_csv(f'result/esgc_dot_liq_value_q{quantile_set}.csv')
+esgc_dot_oancf_value = saving_oneway_pf_vw(quantile=quantile_set, df_temp=df_ESGC_dot_oancf)
+(esgc_dot_oancf_value.iloc[:,0] - esgc_dot_oancf_value.iloc[:,-1]).to_csv(f'result/esgc_dot_oancf_value_q{quantile_set}.csv')
+esgc_to_booklev_value = saving_oneway_pf_vw(quantile=quantile_set, df_temp=df_ESGC_to_booklev)
+(esgc_to_booklev_value.iloc[:,0] - esgc_to_booklev_value.iloc[:,-1]).to_csv(f'result/esgc_to_booklev_value_q{quantile_set}.csv')
+
+# Perception
+esgc_to_ad_value = saving_oneway_pf_vw(quantile=quantile_set, df_temp=df_ESGC_to_ad)
+(esgc_to_ad_value.iloc[:,0] - esgc_to_ad_value.iloc[:,-1]).to_csv(f'result/esgc_to_ad_value_q{quantile_set}.csv')
+
+esgc_to_at_value.describe()
+esgc_to_sale_value.describe()
+esgc_dot_liq_value.describe()
+esgc_dot_oancf_value.describe()
+esgc_to_booklev_value.describe()
+esgc_to_ad_value.describe()
+
+
 ##########################################################
 # 2.4. Saving TWO-WAY portfolio return data
 ##########################################################
@@ -314,7 +354,7 @@ def saving_twoway_pf_vw(quantile_1, quantile_2, df_temp_1, df_temp_2=df_MV_year,
 
 # Environment: Set quantile
 quantile_1_set = 3
-quantile_2_set = 2
+quantile_2_set = 3
 
 # Size
 esg_to_at_value_two_size = saving_twoway_pf_vw(quantile_1=quantile_1_set, quantile_2=quantile_2_set, df_temp_1=df_ESG_to_at)
