@@ -14,22 +14,22 @@ import numpy as np
 ESG
 '''
 '''controlled ESG data'''
-# df_ESG_to_at = pd.read_csv('data/df_ESG_to_at.csv', index_col=0)
-# df_ESG_to_sale = pd.read_csv('data/df_ESG_to_sale.csv', index_col=0)
-# df_ESG_dot_liq = pd.read_csv('data/df_ESG_dot_liq.csv', index_col=0)
-# df_ESG_dot_oancf = pd.read_csv('data/df_ESG_dot_oancf.csv', index_col=0)
-# df_ESG_to_booklev = pd.read_csv('data/df_ESG_to_booklev.csv', index_col=0)
-# df_ESG_to_ad = pd.read_csv('data/df_ESG_to_ad.csv', index_col=0)
+df_ESG_to_at = pd.read_csv('data/df_ESG_to_at.csv', index_col=0)
+df_ESG_to_sale = pd.read_csv('data/df_ESG_to_sale.csv', index_col=0)
+df_ESG_dot_liq = pd.read_csv('data/df_ESG_dot_liq.csv', index_col=0)
+df_ESG_dot_oancf = pd.read_csv('data/df_ESG_dot_oancf.csv', index_col=0)
+df_ESG_to_booklev = pd.read_csv('data/df_ESG_to_booklev.csv', index_col=0)
+df_ESG_to_ad = pd.read_csv('data/df_ESG_to_ad.csv', index_col=0)
 
 '''MINMAX (LOG) scaling data'''
 '''note. the below are scaled w/o log'''
-df_ESG_to_at = pd.read_csv('data/df_ESG_to_at_mmlog.csv', index_col=0)
-df_ESG_to_sale = pd.read_csv('data/df_ESG_to_sale_mmlog.csv', index_col=0)
-df_ESG_dot_liq = pd.read_csv('data/df_ESG_dot_liq_mmlog.csv', index_col=0)
-df_ESG_dot_oancf = pd.read_csv('data/df_ESG_dot_oancf_mmlog.csv', index_col=0)
-df_ESG_to_booklev = pd.read_csv('data/df_ESG_to_booklev_mmlog.csv', index_col=0)
-df_ESG_to_ad = pd.read_csv('data/df_ESG_to_ad_mmlog.csv', index_col=0)
-df_ESG_to_ad_sale = pd.read_csv('data/df_ESG_to_ad_sale_mmlog.csv', index_col=0)
+# df_ESG_to_at = pd.read_csv('data/df_ESG_to_at_mmlog.csv', index_col=0)
+# df_ESG_to_sale = pd.read_csv('data/df_ESG_to_sale_mmlog.csv', index_col=0)
+# df_ESG_dot_liq = pd.read_csv('data/df_ESG_dot_liq_mmlog.csv', index_col=0)
+# df_ESG_dot_oancf = pd.read_csv('data/df_ESG_dot_oancf_mmlog.csv', index_col=0)
+# df_ESG_to_booklev = pd.read_csv('data/df_ESG_to_booklev_mmlog.csv', index_col=0)
+# df_ESG_to_ad = pd.read_csv('data/df_ESG_to_ad_mmlog.csv', index_col=0)
+# df_ESG_to_ad_sale = pd.read_csv('data/df_ESG_to_ad_sale_mmlog.csv', index_col=0)
 
 '''ESG, controlled by Lagged'''
 # df_ESG_to_at= pd.read_csv('data/df_ESG_to_l_at_mmlog.csv', index_col=0)
@@ -306,27 +306,38 @@ quantile_set = 10
 '''
 CAUTION: Lagged -> start_criterion = 2003
 '''
+### save decile portfolios
 ### save long-short pf as factor (high(q) - low(1)) 
 # Size
 esg_to_at_value = saving_oneway_pf_vw(quantile=quantile_set, df_temp=df_ESG_to_at, start_criterion=2002)
-(esg_to_at_value.iloc[:,-1] - esg_to_at_value.iloc[:,0]).to_csv(f'result/esg_to_at_value_q{quantile_set}.csv') 
+esg_to_at_value.to_csv(f'result/esg_to_at_value_q{quantile_set}.csv') # nx10 decile
+(esg_to_at_value.iloc[:,-1] - esg_to_at_value.iloc[:,0]).to_csv(f'result/esg_to_at_value_factor_q{quantile_set}.csv')  # nx1 LS pf
+
 esg_to_sale_value = saving_oneway_pf_vw(quantile=quantile_set, df_temp=df_ESG_to_sale, start_criterion=2002)
-(esg_to_sale_value.iloc[:,-1] - esg_to_sale_value.iloc[:,0]).to_csv(f'result/esg_to_sale_value_q{quantile_set}.csv')
+esg_to_sale_value.to_csv(f'result/esg_to_sale_value_q{quantile_set}.csv')
+(esg_to_sale_value.iloc[:,-1] - esg_to_sale_value.iloc[:,0]).to_csv(f'result/esg_to_sale_value_factor_q{quantile_set}.csv')
 
 # Agency problem
 esg_dot_liq_value = saving_oneway_pf_vw(quantile=quantile_set, df_temp=df_ESG_dot_liq, start_criterion=2002)
-(esg_dot_liq_value.iloc[:,-1] - esg_dot_liq_value.iloc[:,0]).to_csv(f'result/esg_dot_liq_value_q{quantile_set}.csv')
+esg_dot_liq_value.to_csv(f'result/esg_dot_liq_value_q{quantile_set}.csv')
+(esg_dot_liq_value.iloc[:,-1] - esg_dot_liq_value.iloc[:,0]).to_csv(f'result/esg_dot_liq_value_factor_q{quantile_set}.csv')
+
 esg_dot_oancf_value = saving_oneway_pf_vw(quantile=quantile_set, df_temp=df_ESG_dot_oancf, start_criterion=2002)
-(esg_dot_oancf_value.iloc[:,-1] - esg_dot_oancf_value.iloc[:,0]).to_csv(f'result/esg_dot_oancf_value_q{quantile_set}.csv')
+esg_dot_oancf_value.to_csv(f'result/esg_dot_oancf_value_q{quantile_set}.csv')
+(esg_dot_oancf_value.iloc[:,-1] - esg_dot_oancf_value.iloc[:,0]).to_csv(f'result/esg_dot_oancf_value_factor_q{quantile_set}.csv')
+
 esg_to_booklev_value = saving_oneway_pf_vw(quantile=quantile_set, df_temp=df_ESG_to_booklev, start_criterion=2002)
-(esg_to_booklev_value.iloc[:,-1] - esg_to_booklev_value.iloc[:,0]).to_csv(f'result/esg_to_booklev_value_q{quantile_set}.csv')
+esg_to_booklev_value.to_csv(f'result/esg_to_booklev_value_q{quantile_set}.csv')
+(esg_to_booklev_value.iloc[:,-1] - esg_to_booklev_value.iloc[:,0]).to_csv(f'result/esg_to_booklev_value_factor_q{quantile_set}.csv')
 
 # Perception
 esg_to_ad_value = saving_oneway_pf_vw(quantile=quantile_set, df_temp=df_ESG_to_ad, start_criterion=2002)
-(esg_to_ad_value.iloc[:,-1] - esg_to_ad_value.iloc[:,0]).to_csv(f'result/esg_to_ad_value_q{quantile_set}.csv')
-esg_to_ad_sale_value = saving_oneway_pf_vw(quantile=quantile_set, df_temp=df_ESG_to_ad_sale, start_criterion=2002)
-(esg_to_ad_sale_value.iloc[:,-1] - esg_to_ad_sale_value.iloc[:,0]).to_csv(f'result/esg_to_ad_sale_value_q{quantile_set}.csv')
+esg_to_ad_value.to_csv(f'result/esg_to_ad_value_q{quantile_set}.csv')
+(esg_to_ad_value.iloc[:,-1] - esg_to_ad_value.iloc[:,0]).to_csv(f'result/esg_to_ad_value_factor_q{quantile_set}.csv')
 
+# esg_to_ad_sale_value = saving_oneway_pf_vw(quantile=quantile_set, df_temp=df_ESG_to_ad_sale, start_criterion=2002)
+# esg_to_ad_sale_value.to_csv(f'result/esg_to_ad_sale_value_q{quantile_set}.csv')
+# (esg_to_ad_sale_value.iloc[:,-1] - esg_to_ad_sale_value.iloc[:,0]).to_csv(f'result/esg_to_ad_sale_value_factor_q{quantile_set}.csv')
 
 esg_to_at_value.describe()
 esg_to_sale_value.describe()
@@ -334,6 +345,7 @@ esg_dot_liq_value.describe()
 esg_dot_oancf_value.describe()
 esg_to_booklev_value.describe()
 esg_to_ad_value.describe()
+# esg_to_ad_sale_value.describe()
 
 '''ESG Controversy'''
 ### save long-short pf as factor (high - low)
