@@ -21,13 +21,15 @@ ESG
 # df_ESG_to_booklev = pd.read_csv('data/df_ESG_to_booklev.csv', index_col=0)
 # df_ESG_to_ad = pd.read_csv('data/df_ESG_to_ad.csv', index_col=0)
 
-'''MINMAX LOG scaling data'''
+'''MINMAX (LOG) scaling data'''
+'''note. the below are scaled w/o log'''
 df_ESG_to_at = pd.read_csv('data/df_ESG_to_at_mmlog.csv', index_col=0)
 df_ESG_to_sale = pd.read_csv('data/df_ESG_to_sale_mmlog.csv', index_col=0)
 df_ESG_dot_liq = pd.read_csv('data/df_ESG_dot_liq_mmlog.csv', index_col=0)
 df_ESG_dot_oancf = pd.read_csv('data/df_ESG_dot_oancf_mmlog.csv', index_col=0)
 df_ESG_to_booklev = pd.read_csv('data/df_ESG_to_booklev_mmlog.csv', index_col=0)
 df_ESG_to_ad = pd.read_csv('data/df_ESG_to_ad_mmlog.csv', index_col=0)
+df_ESG_to_ad_sale = pd.read_csv('data/df_ESG_to_ad_sale_mmlog.csv', index_col=0)
 
 '''ESG, controlled by Lagged'''
 # df_ESG_to_at= pd.read_csv('data/df_ESG_to_l_at_mmlog.csv', index_col=0)
@@ -322,6 +324,9 @@ esg_to_booklev_value = saving_oneway_pf_vw(quantile=quantile_set, df_temp=df_ESG
 # Perception
 esg_to_ad_value = saving_oneway_pf_vw(quantile=quantile_set, df_temp=df_ESG_to_ad, start_criterion=2002)
 (esg_to_ad_value.iloc[:,-1] - esg_to_ad_value.iloc[:,0]).to_csv(f'result/esg_to_ad_value_q{quantile_set}.csv')
+esg_to_ad_sale_value = saving_oneway_pf_vw(quantile=quantile_set, df_temp=df_ESG_to_ad_sale, start_criterion=2002)
+(esg_to_ad_sale_value.iloc[:,-1] - esg_to_ad_sale_value.iloc[:,0]).to_csv(f'result/esg_to_ad_sale_value_q{quantile_set}.csv')
+
 
 esg_to_at_value.describe()
 esg_to_sale_value.describe()
