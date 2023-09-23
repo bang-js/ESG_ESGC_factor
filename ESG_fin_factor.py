@@ -20,6 +20,13 @@ df_ESG_dot_liq = pd.read_csv('data/df_ESG_dot_liq.csv', index_col=0)
 df_ESG_dot_oancf = pd.read_csv('data/df_ESG_dot_oancf.csv', index_col=0)
 df_ESG_to_booklev = pd.read_csv('data/df_ESG_to_booklev.csv', index_col=0)
 df_ESG_to_ad = pd.read_csv('data/df_ESG_to_ad.csv', index_col=0)
+df_ESG_to_ad_sale = pd.read_csv('data/df_ESG_to_ad_sale.csv', index_col=0)
+
+df_ESG_to_liq = pd.read_csv('data/df_ESG_to_liq.csv', index_col=0)
+# df_ESG_to_oancf = pd.read_csv('data/df_ESG_to_oancf.csv', index_col=0)
+df_ESG_dot_booklev = pd.read_csv('data/df_ESG_dot_booklev.csv', index_col=0)
+df_ESG_dot_ad = pd.read_csv('data/df_ESG_dot_ad.csv', index_col=0)
+df_ESG_dot_ad_sale = pd.read_csv('data/df_ESG_dot_ad_sale.csv', index_col=0)
 
 '''MINMAX (LOG) scaling data'''
 '''note. the below are scaled w/o log'''
@@ -330,6 +337,13 @@ esg_to_booklev_value = saving_oneway_pf_vw(quantile=quantile_set, df_temp=df_ESG
 esg_to_booklev_value.to_csv(f'result/esg_to_booklev_value_q{quantile_set}.csv')
 (esg_to_booklev_value.iloc[:,-1] - esg_to_booklev_value.iloc[:,0]).to_csv(f'result/esg_to_booklev_value_factor_q{quantile_set}.csv')
 
+esg_to_liq_value = saving_oneway_pf_vw(quantile=quantile_set, df_temp=df_ESG_to_liq, start_criterion=2002)
+esg_to_liq_value.to_csv(f'result/esg_to_liq_value_q{quantile_set}.csv')
+(esg_to_liq_value.iloc[:,-1] - esg_to_liq_value.iloc[:,0]).to_csv(f'result/esg_to_liq_value_factor_q{quantile_set}.csv')
+esg_dot_booklev_value = saving_oneway_pf_vw(quantile=quantile_set, df_temp=df_ESG_dot_booklev, start_criterion=2002)
+esg_dot_booklev_value.to_csv(f'result/esg_dot_booklev_value_q{quantile_set}.csv')
+(esg_dot_booklev_value.iloc[:,-1] - esg_dot_booklev_value.iloc[:,0]).to_csv(f'result/esg_dot_booklev_value_factor_q{quantile_set}.csv')
+
 # Perception
 esg_to_ad_value = saving_oneway_pf_vw(quantile=quantile_set, df_temp=df_ESG_to_ad, start_criterion=2002)
 esg_to_ad_value.to_csv(f'result/esg_to_ad_value_q{quantile_set}.csv')
@@ -338,6 +352,11 @@ esg_to_ad_value.to_csv(f'result/esg_to_ad_value_q{quantile_set}.csv')
 # esg_to_ad_sale_value = saving_oneway_pf_vw(quantile=quantile_set, df_temp=df_ESG_to_ad_sale, start_criterion=2002)
 # esg_to_ad_sale_value.to_csv(f'result/esg_to_ad_sale_value_q{quantile_set}.csv')
 # (esg_to_ad_sale_value.iloc[:,-1] - esg_to_ad_sale_value.iloc[:,0]).to_csv(f'result/esg_to_ad_sale_value_factor_q{quantile_set}.csv')
+
+esg_dot_ad_value = saving_oneway_pf_vw(quantile=quantile_set, df_temp=df_ESG_dot_ad, start_criterion=2002)
+
+esg_dot_ad_sale_value = saving_oneway_pf_vw(quantile=quantile_set, df_temp=df_ESG_to_ad_sale, start_criterion=2002)
+
 
 esg_to_at_value.describe()
 esg_to_sale_value.describe()
@@ -417,6 +436,11 @@ esg_dot_oancf_value_two_size.to_csv(f'result/esg_dot_oancf_value_two_size_q{quan
 esg_to_booklev_value_two_size = saving_twoway_pf_vw(quantile_1=quantile_1_set, quantile_2=quantile_2_set, df_temp_1=df_ESG_to_booklev)
 esg_to_booklev_value_two_size.to_csv(f'result/esg_to_booklev_value_two_size_q{quantile_1_set}_{quantile_2_set}.csv')
 
+esg_to_liq_value_two_size = saving_twoway_pf_vw(quantile_1=quantile_1_set, quantile_2=quantile_2_set, df_temp_1=df_ESG_to_liq)
+esg_to_liq_value_two_size.to_csv(f'result/esg_to_liq_value_two_size_q{quantile_1_set}_{quantile_2_set}.csv')
+esg_dot_booklev_value_two_size = saving_twoway_pf_vw(quantile_1=quantile_1_set, quantile_2=quantile_2_set, df_temp_1=df_ESG_dot_booklev)
+esg_dot_booklev_value_two_size.to_csv(f'result/esg_dot_booklev_value_two_size_q{quantile_1_set}_{quantile_2_set}.csv')
+
 # Perception
 esg_to_ad_value_two_size = saving_twoway_pf_vw(quantile_1=quantile_1_set, quantile_2=quantile_2_set, df_temp_1=df_ESG_to_ad)
 esg_to_ad_value_two_size.to_csv(f'result/esg_to_ad_value_two_size_q{quantile_1_set}_{quantile_2_set}.csv')
@@ -429,6 +453,9 @@ esg_dot_liq_value_two_size.describe()
 esg_dot_oancf_value_two_size.describe()
 esg_to_booklev_value_two_size.describe()
 esg_to_ad_value_two_size.describe()
+
+esg_to_liq_value_two_size.describe()
+esg_dot_booklev_value_two_size.describe()
 
 '''Greenwashing'''
 esg_gw_value_two_size = saving_twoway_pf_vw(quantile_1=quantile_1_set, quantile_2=quantile_2_set, df_temp_1=df_GW, start_criterion=2003)
@@ -493,6 +520,15 @@ esg_to_booklev_value_two_size_factor = saving_twoway_factor_vw(df_temp_1=df_ESG_
                                                         quantile_1=saving_twoway_factor_vw_q1, 
                                                         quantile_2=saving_twoway_factor_vw_q2)
 esg_to_booklev_value_two_size_factor.to_csv(f'result/esg_to_booklev_value_two_size_factor_q{saving_twoway_factor_vw_q1}_{saving_twoway_factor_vw_q2}.csv')
+
+esg_to_liq_value_two_size_factor = saving_twoway_factor_vw(df_temp_1=df_ESG_to_liq, 
+                                                        quantile_1=saving_twoway_factor_vw_q1, 
+                                                        quantile_2=saving_twoway_factor_vw_q2)
+esg_to_liq_value_two_size_factor.to_csv(f'result/esg_to_liq_value_two_size_factor_q{saving_twoway_factor_vw_q1}_{saving_twoway_factor_vw_q2}.csv')
+esg_dot_booklev_value_two_size_factor = saving_twoway_factor_vw(df_temp_1=df_ESG_dot_booklev,
+                                                        quantile_1=saving_twoway_factor_vw_q1, 
+                                                        quantile_2=saving_twoway_factor_vw_q2)
+esg_dot_booklev_value_two_size_factor.to_csv(f'result/esg_dot_booklev_value_two_size_factor_q{saving_twoway_factor_vw_q1}_{saving_twoway_factor_vw_q2}.csv')
 
 # Perception
 esg_to_ad_value_two_size_factor = saving_twoway_factor_vw(df_temp_1=df_ESG_to_ad,
