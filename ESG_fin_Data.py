@@ -433,29 +433,51 @@ df_ESG_to_sale = cal_two_df(df1=df_ESG_match, df2=sale_df, mode='div')      # ES
 df_ESG_dot_liq = cal_two_df(df1=df_ESG_match, df2=df_liq_to_at, mode='mul')
 df_ESG_dot_oancf = cal_two_df(df1=df_ESG_match, df2=df_oancf_to_at, mode='mul') # alt proxy of liq
 df_ESG_to_booklev = cal_two_df(df1=df_ESG_match, df2=df_booklev_to_at, mode='div')
+# anti: 1/(ESG score/liquidity) or 1/(ESG score*book leverage)
+df_ESG_to_liq = cal_two_df(df1=df_ESG_match, df2=df_liq_to_at, mode='div')
+df_ESG_to_oancf = cal_two_df(df1=df_ESG_match, df2=df_oancf_to_at, mode='div') # alt proxy of liq
+df_ESG_dot_booklev = cal_two_df(df1=df_ESG_match, df2=df_booklev_to_at, mode='mul')
 # ESG/ad
 df_ESG_to_ad = cal_two_df(df1=df_ESG_match, df2=df_ad_to_at, mode='div')
 df_ESG_to_ad_sale = cal_two_df(df1=df_ESG_match, df2=df_ad_to_sale, mode='div')
+# anti ESG*ad
+df_ESG_dot_ad = cal_two_df(df1=df_ESG_match, df2=df_ad_to_at, mode='mul')
+df_ESG_dot_ad_sale = cal_two_df(df1=df_ESG_match, df2=df_ad_to_sale, mode='mul')
 
 
 # describe
 df_ESG_to_at.stack().describe().round(4) # [0, inf) # [19 rows x 4303 columns]
 df_ESG_to_sale.stack().describe().round(4) # [0, inf) # [19 rows x 4303 columns]
 # df_ESG_to_sale.stack().quantile(np.arange(0.9,1.005,0.005)).round(2)
+
 df_ESG_dot_liq.stack().describe().round(4) # [0, inf) # [19 rows x 4303 columns]
 df_ESG_dot_oancf.stack().describe().round(4) # (-inf, inf) # [19 rows x 4303 columns]
 df_ESG_to_booklev.stack().describe().round(4) # [0, inf]) # [19 rows x 4303 columns]
+df_ESG_to_liq.stack().describe().round(4) # [0, inf) # [19 rows x 4303 columns]
+df_ESG_to_oancf.stack().describe().round(4) # (-inf, inf) # [19 rows x 4303 columns]
+df_ESG_dot_booklev.stack().describe().round(4) # [0, inf]) # [19 rows x 4303 columns]
+
 df_ESG_to_ad.stack().describe().round(4) # [0, inf]) # [19 rows x 2110 columns]
 df_ESG_to_ad_sale.stack().describe().round(4) # [0, inf]) # [19 rows x 2110 columns]
+df_ESG_dot_ad.stack().describe().round(4) # [0, inf]) # [19 rows x 2110 columns]
+df_ESG_dot_ad_sale.stack().describe().round(4) # [0, inf]) # [19 rows x 2110 columns]
+
 
 # save the dataframes
 df_ESG_to_at.to_csv('data/df_ESG_to_at.csv')
 df_ESG_to_sale.to_csv('data/df_ESG_to_sale.csv')
+
 df_ESG_dot_liq.to_csv('data/df_ESG_dot_liq.csv')
 df_ESG_dot_oancf.to_csv('data/df_ESG_dot_oancf.csv')
 df_ESG_to_booklev.to_csv('data/df_ESG_to_booklev.csv')
+df_ESG_to_liq.to_csv('data/df_ESG_to_liq.csv')
+# df_ESG_to_oancf.to_csv('data/df_ESG_to_oancf.csv')
+df_ESG_dot_booklev.to_csv('data/df_ESG_dot_booklev.csv')
+
 df_ESG_to_ad.to_csv('data/df_ESG_to_ad.csv')
 df_ESG_to_ad_sale.to_csv('data/df_ESG_to_ad_sale.csv')
+df_ESG_dot_ad.to_csv('data/df_ESG_dot_ad.csv')
+df_ESG_dot_ad_sale.to_csv('data/df_ESG_dot_ad_sale.csv')
 
 '''w/ scaling'''
 # ESG/Size
