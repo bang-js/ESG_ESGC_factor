@@ -10,6 +10,8 @@ import numpy as np
 ##########################################################
 # 2.1. Retrieving saved data: p, mv, controlled ESG
 ##########################################################
+'''fin data: controll'''
+df_ad_to_at = pd.read_csv('data/df_ad_to_at.csv', index_col=0)
 '''
 ESG
 '''
@@ -23,7 +25,7 @@ df_ESG_to_ad = pd.read_csv('data/df_ESG_to_ad.csv', index_col=0)
 df_ESG_to_ad_sale = pd.read_csv('data/df_ESG_to_ad_sale.csv', index_col=0)
 
 df_ESG_to_liq = pd.read_csv('data/df_ESG_to_liq.csv', index_col=0)
-# df_ESG_to_oancf = pd.read_csv('data/df_ESG_to_oancf.csv', index_col=0)
+df_ESG_to_oancf = pd.read_csv('data/df_ESG_to_oancf.csv', index_col=0)
 df_ESG_dot_booklev = pd.read_csv('data/df_ESG_dot_booklev.csv', index_col=0)
 df_ESG_dot_ad = pd.read_csv('data/df_ESG_dot_ad.csv', index_col=0)
 df_ESG_dot_ad_sale = pd.read_csv('data/df_ESG_dot_ad_sale.csv', index_col=0)
@@ -355,7 +357,10 @@ esg_to_ad_value.to_csv(f'result/esg_to_ad_value_q{quantile_set}.csv')
 
 esg_dot_ad_value = saving_oneway_pf_vw(quantile=quantile_set, df_temp=df_ESG_dot_ad, start_criterion=2002)
 
-esg_dot_ad_sale_value = saving_oneway_pf_vw(quantile=quantile_set, df_temp=df_ESG_to_ad_sale, start_criterion=2002)
+# control
+df_ad_to_at_value = saving_oneway_pf_vw(quantile=quantile_set, df_temp=df_ad_to_at, start_criterion=2002)
+df_ad_to_at_value.to_csv(f'result/df_ad_to_at_value_q{quantile_set}.csv')
+(df_ad_to_at_value.iloc[:,-1] - df_ad_to_at_value.iloc[:,0]).to_csv(f'result/df_ad_to_at_value_factor_q{quantile_set}.csv')
 
 
 esg_to_at_value.describe()
@@ -444,6 +449,11 @@ esg_dot_booklev_value_two_size.to_csv(f'result/esg_dot_booklev_value_two_size_q{
 # Perception
 esg_to_ad_value_two_size = saving_twoway_pf_vw(quantile_1=quantile_1_set, quantile_2=quantile_2_set, df_temp_1=df_ESG_to_ad)
 esg_to_ad_value_two_size.to_csv(f'result/esg_to_ad_value_two_size_q{quantile_1_set}_{quantile_2_set}.csv')
+
+df_ad_to_at_value_two_size = saving_twoway_pf_vw(quantile_1=quantile_1_set, quantile_2=quantile_2_set, df_temp_1=df_ad_to_at)
+df_ad_to_at_value_two_size.to_csv(f'result/df_ad_to_at_value_two_size_q{quantile_1_set}_{quantile_2_set}.csv')
+
+
 
 # describe
 # Notice. 0: lowest & smallest, q1*q2-1: highest & biggest
@@ -535,6 +545,11 @@ esg_to_ad_value_two_size_factor = saving_twoway_factor_vw(df_temp_1=df_ESG_to_ad
                                                         quantile_1=saving_twoway_factor_vw_q1, 
                                                         quantile_2=saving_twoway_factor_vw_q2)
 esg_to_ad_value_two_size_factor.to_csv(f'result/esg_to_ad_value_two_size_factor_q{saving_twoway_factor_vw_q1}_{saving_twoway_factor_vw_q2}.csv')
+
+df_ad_to_at_value_two_size_factor = saving_twoway_factor_vw(df_temp_1=df_ad_to_at,
+                                                        quantile_1=saving_twoway_factor_vw_q1, 
+                                                        quantile_2=saving_twoway_factor_vw_q2)
+df_ad_to_at_value_two_size_factor.to_csv(f'result/df_ad_to_at_value_two_size_factor_q{saving_twoway_factor_vw_q1}_{saving_twoway_factor_vw_q2}.csv')
 
 
 '''Greenwashing'''
