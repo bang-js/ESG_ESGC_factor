@@ -301,15 +301,18 @@ df_ESGC_match = conv_m2y(df_ESGC_match)
 df_ESG_match = df_ESG_match[df_ESG_match.index < 2021]
 df_ESGC_match = df_ESGC_match[df_ESGC_match.index < 2021]
 
+# delete same column
+df_ESG_match = df_ESG_match.T.drop_duplicates().T
+df_ESGC_match = df_ESGC_match.T.drop_duplicates().T
+
 # # save
 # df_P_match.to_csv('df_P.csv')
 # df_MV_match.to_csv('df_MV.csv')
 
 # describe
-df_ESG_match.apply(pd.DataFrame.describe, axis=1).round(2) # by year
-df_ESG_match.stack().describe().round(2) # all
-df_ESGC_match.stack().describe().round(2) # all
-
+print(df_ESG_match.apply(pd.DataFrame.describe, axis=1).round(2)) # by year
+print(df_ESG_match.stack().describe().round(2)) # all
+print(df_ESGC_match.stack().describe().round(2)) # all
 
 ### ESG Controversy change ###
 df_ESGC_Chg_match = df_ESGC_match.diff()
@@ -342,25 +345,62 @@ def cal_two_df(df1, df2, mode):
         df_result = df1[overlapping_columns].mul(df2[overlapping_columns])
     else:
         print('no support type')
+
+    df_result = df_result.replace([np.inf, -np.inf], np.nan)
     return df_result
 
 # financial variables divided by asset
 df_liq_to_at = cal_two_df(df1=che_df, df2=at_df, mode='div') *100         # Cash and Short-Term Investments scaled by assets (liquidity)
-df_booklev_to_at = cal_two_df(df1=lt_df, df2=at_df, mode='div') *100       # liabilities scaled by assets (book leverage)
+df_booklev_to_at = cal_two_df(df1=lt_df, df2=at_df, mode='div') *100      # liabilities scaled by assets (book leverage)
 df_oancf_to_at = cal_two_df(df1=oancf_df, df2=at_df, mode='div') *100     # Operating Activities Net Cash Flow scaled by assets
-df_ad_to_at = cal_two_df(df1=xad_df, df2=at_df, mode='div') *100           # Ads expenditure scaled by assets
-df_ad_to_sale = cal_two_df(df1=xad_df, df2=sale_df, mode='div') *100           # Ads expenditure scaled by assets
+df_ad_to_at = cal_two_df(df1=xad_df, df2=at_df, mode='div') *100          # Ads expenditure scaled by assets
+df_ad_to_sale = cal_two_df(df1=xad_df, df2=sale_df, mode='div') *100      # Ads expenditure scaled by sales
 
-# summary statistics
-at_df.stack().describe().round(2)
-sale_df.stack().describe().round(2)
-df_liq_to_at.stack().describe().round(4) # [0, inf)
-df_booklev_to_at.stack().describe().round(4) # [0, inf)
-df_oancf_to_at.stack().describe().round(4) # (-inf, inf)
-df_oancf_to_at.stack().quantile(np.arange(0,1,0.1)).round(4)
+# # summary statistics
+'''caveat: before match with ESG data'''
+# at_df.stack().describe().round(2)
+# sale_df.stack().describe().round(2)
+# df_liq_to_at.stack().describe().round(4) # [0, inf)
+# df_booklev_to_at.stack().describe().round(4) # [0, inf)
+# df_oancf_to_at.stack().describe().round(4) # (-inf, inf)
+# df_oancf_to_at.stack().quantile(np.arange(0,1,0.1)).round(4)
 df_ad_to_at.stack().describe().round(4) # [0,inf])
-df_ad_to_at.stack().quantile(np.arange(0.9,1,0.01)).round(4)
-df_ad_to_sale.stack().describe().round(4) # [0,inf])
+df_ad_to_at.apply(pd.DataFrame.describe, axis=1).round(2)
+# df_ad_to_at.stack().quantile(np.arange(0.9,1,0.01)).round(4)
+# df_ad_to_sale.stack().describe().round(4) # [0,inf])
+
+'''matched
+note. should match and convert the value which possesses the index of NaN in counterpart df into NaN
+'''
+# def matched_dscr(df2,df1=df_ESG_match):
+#     '''
+#     Calculate summary stat. after matched with ESG data to synchronize two columns from each dataframe
+#     '''
+#     overlapping_columns = df1.columns.intersection(df2.columns)
+#     for c in overlapping_columns:
+#         notna_index_df1 = df1[c].notna()
+#         notna_index_df2 = df2[c].notna()
+
+    # pd.DataFrame(np.where(df1.isna() | df2.isna(), np.nan, df1))
+
+#     print("#"*50,"\nThe first df")
+#     print("by year")
+#     print(df1[overlapping_columns].apply(pd.DataFrame.describe, axis=1).round(2))
+#     print("total")
+#     print(df1[overlapping_columns].stack().describe().round(2))
+
+#     print("#"*50,"\nThe Second df")
+#     print("by year")
+#     print(df2[overlapping_columns].apply(pd.DataFrame.describe, axis=1).round(2))
+#     print("total")
+#     print(df2[overlapping_columns].stack().describe().round(2))
+
+# matched_dscr(df_ad_to_at, df_ESG_match)
+
+
+
+# save the dataframes
+df_ad_to_at.to_csv('data/df_ad_to_at.csv')
 
 '''
 Exponential transformation:
@@ -386,23 +426,29 @@ def apply_log(x):
     else: # symmetric with x>=0
         return -np.log(1 - x)
 
+def min_max_scaling(row):
+    min_val = row.min()
+    max_val = row.max()
+    return (row - min_val) / (max_val - min_val)
+
 def minmax_scale(df, log_scale=False):
-    '''min max scale
-    replace 0 with min value among not 0 (avoid error from dividing by zero)'''
+    '''min max scale - year by year
+    If dividing by zero, then div generate nan'''
     # minmax scale
     if log_scale == True: 
-        df_copy = df.copy().applymap(apply_log).transpose()
+        df_copy = df.copy().applymap(apply_log)
     else: # default
-        df_copy = df.copy().transpose()
-    df_copy = (df_copy - df_copy.min()) / (df_copy.max() - df_copy.min())
-    df_copy = df_copy.transpose() * 100
+        df_copy = df.copy()
 
-    # replace zero -> second min
-    min_value = df_copy.min().min()
-    second_min_value = df_copy[df_copy > min_value].min().min()
-    df_copy[df_copy == min_value] = second_min_value
+    df_copy = df_copy.apply(min_max_scaling, axis=1) * 100
+    
+    # # replace zero -> second min
+    # min_value = df_copy.min().min()
+    # second_min_value = df_copy[df_copy > min_value].min().min()
+    # df_copy[df_copy == min_value] = second_min_value
 
     return df_copy
+
 
 # assets and sales are needed to be taken the logarithm
 minmax_scale(at_df, log_scale=True).stack().describe().round(2)
@@ -419,6 +465,9 @@ minmax_scale(df_ad_to_at).stack().describe().round(4)
 minmax_scale(df_ad_to_at, log_scale=True).stack().describe().round(4)
 minmax_scale(df_ad_to_sale).stack().describe().round(4)
 minmax_scale(df_ad_to_sale, log_scale=True).stack().describe().round(4)
+
+# describe
+minmax_scale(df_ad_to_at).apply(pd.DataFrame.describe, axis=1).round(2)
 
 '''
 ESG
@@ -458,10 +507,11 @@ df_ESG_to_oancf.stack().describe().round(4) # (-inf, inf) # [19 rows x 4303 colu
 df_ESG_dot_booklev.stack().describe().round(4) # [0, inf]) # [19 rows x 4303 columns]
 
 df_ESG_to_ad.stack().describe().round(4) # [0, inf]) # [19 rows x 2110 columns]
+df_ESG_to_ad.apply(pd.DataFrame.describe, axis=1).round(2)
+
 df_ESG_to_ad_sale.stack().describe().round(4) # [0, inf]) # [19 rows x 2110 columns]
 df_ESG_dot_ad.stack().describe().round(4) # [0, inf]) # [19 rows x 2110 columns]
 df_ESG_dot_ad_sale.stack().describe().round(4) # [0, inf]) # [19 rows x 2110 columns]
-
 
 # save the dataframes
 df_ESG_to_at.to_csv('data/df_ESG_to_at.csv')
@@ -501,6 +551,7 @@ df_ESG_dot_oancf_mmlog.stack().describe().round(4) # (-inf, inf) # [19 rows x 43
 df_ESG_to_booklev_mmlog.stack().describe().round(4) # [0, inf]) # [19 rows x 4303 columns]
 # df_ESG_to_booklev_mmlog.stack().quantile(np.arange(0.9,1.005,0.005)).round(2)
 df_ESG_to_ad_mmlog.stack().describe().round(4) # [0, inf]) # [19 rows x 2110 columns]
+df_ESG_to_ad_mmlog.apply(pd.DataFrame.describe, axis=1).round(2)
 df_ESG_to_ad_mmlog.stack().quantile(np.arange(0.9,1.005,0.005)).round(2)
 df_ESG_to_ad_sale_mmlog.stack().describe().round(2) # [0, inf]) # [19 rows x 2110 columns]
 df_ESG_to_ad_sale_mmlog.stack().quantile(np.arange(0.9,1.005,0.005)).round(2)
